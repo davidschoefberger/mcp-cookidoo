@@ -50,6 +50,24 @@ _WORDS = {
         "warm_up": "Réchauffage",
         "blend": "Mixage",
     },
+    "de": {
+        "speed": "Stufe",
+        "soft": "Sanftrührstufe",
+        "reverse": "Linkslauf",
+        "dough": "Teig kneten",
+        "browning": "Anbraten",
+        "gentle": "sanft",
+        "intense": "intensiv",
+        "steaming": "Dampfgaren",
+        "varoma": "Varoma",
+        "simmering_basket": "Garkorb",
+        "varoma_and_simmering_basket": "Varoma und Garkorb",
+        "turbo": "Turbo",
+        "pulses": "Mal",
+        "rice_cooker": "Reis kochen",
+        "warm_up": "Aufwärmen",
+        "blend": "Mixen",
+    },
     "en": {
         "speed": "speed",
         "soft": "stirring speed",
@@ -81,12 +99,20 @@ def _words(language: str) -> dict[str, str]:
     return _WORDS.get(language.split("-")[0].lower(), _WORDS["en"])
 
 
-def format_time(seconds: float) -> str:
+_UNITS = {
+    "de": ("Std.", "Min.", "Sek.", ","),
+}
+
+
+def format_time(seconds: float, language: str = "en") -> str:
+    hour, minute, second, decimal = _UNITS.get(
+        language.split("-")[0].lower(), ("h", "min", "sec", ".")
+    )
     if seconds < 1:
-        return f"{seconds:g} sec"
+        return f"{seconds:g}".replace(".", decimal) + f" {second}"
     hours, rest = divmod(int(seconds), 3600)
     minutes, seconds = divmod(rest, 60)
-    parts = [(hours, "h"), (minutes, "min"), (seconds, "sec")]
+    parts = [(hours, hour), (minutes, minute), (seconds, second)]
     return " ".join(f"{value} {unit}" for value, unit in parts if value)
 
 
@@ -99,7 +125,7 @@ def render(settings: StepSettings, language: str) -> str:
 
     match settings:
         case ManualSettings():
-            parts = [format_time(settings.time)]
+            parts = [format_time(settings.time, language)]
             if settings.temperature == "varoma":
                 parts.append("Varoma")
             elif settings.temperature is not None:
@@ -107,23 +133,23 @@ def render(settings: StepSettings, language: str) -> str:
             parts += [words["reverse"]] if settings.reverse else []
             parts.append(speed(settings.speed))
         case DoughSettings():
-            parts = [words["dough"], format_time(settings.time)]
+            parts = [words["dough"], format_time(settings.time, language)]
         case BrowningSettings():
-            parts = [words["browning"], format_time(settings.time), f"{settings.temperature}°C"]
+            parts = [words["browning"], format_time(settings.time, language), f"{settings.temperature}°C"]
             parts.append(words[settings.power])
         case SteamingSettings():
-            parts = [words["steaming"], format_time(settings.time), words[settings.accessory]]
+            parts = [words["steaming"], format_time(settings.time, language), words[settings.accessory]]
             parts += [words["reverse"]] if settings.reverse else []
             parts.append(speed(settings.speed))
         case TurboSettings():
-            parts = [words["turbo"], format_time(settings.time)]
+            parts = [words["turbo"], format_time(settings.time, language)]
             parts.append(f"{settings.pulses} {words['pulses']}")
         case RiceCookerSettings():
             parts = [words["rice_cooker"]]
         case WarmUpSettings():
             parts = [words["warm_up"], f"{settings.temperature}°C", speed(settings.speed)]
         case BlendSettings():
-            parts = [words["blend"], format_time(settings.time), speed(settings.speed)]
+            parts = [words["blend"], format_time(settings.time, language), speed(settings.speed)]
     return "/".join(parts)
 
 

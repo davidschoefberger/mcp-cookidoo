@@ -22,6 +22,25 @@ def test_format_time():
     assert format_time(90) == "1 min 30 sec"
     assert format_time(5400) == "1 h 30 min"
     assert format_time(0.5) == "0.5 sec"
+    assert format_time(90, "de-AT") == "1 Min. 30 Sek."
+    assert format_time(0.5, "de-DE") == "0,5 Sek."
+
+
+@pytest.mark.parametrize(
+    ("settings", "german"),
+    [
+        ({"time": 240, "speed": "3.5"}, "4 Min./Stufe 3.5"),
+        (
+            {"time": 1200, "temperature": "100", "speed": "soft", "reverse": True},
+            "20 Min./100°C/Linkslauf/Sanftrührstufe",
+        ),
+        ({"mode": "dough", "time": 120}, "Teig kneten/2 Min."),
+        ({"mode": "turbo", "time": 0.5, "pulses": 3}, "Turbo/0,5 Sek./3 Mal"),
+    ],
+)
+def test_render_german(settings, german):
+    parsed = step("{settings}", settings).settings[0]
+    assert render(parsed, "de-AT") == german
 
 
 @pytest.mark.parametrize(
